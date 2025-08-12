@@ -28,8 +28,6 @@ app.get('/api/keywords', async (req, res) => {
     const timestamp = Date.now().toString();
     const signature = generateSignature(timestamp, method, uri, SECRET_KEY);
     
-    console.log('📡 네이버 API 호출 중...');
-    
     const response = await axios.get('https://api.searchad.naver.com' + uri, {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
@@ -44,16 +42,9 @@ app.get('/api/keywords', async (req, res) => {
       }
     });
 
-    console.log('✅ 네이버 API 응답 성공!');
-    
-    // 실제 네이버 검색량 데이터
     const keywordList = response.data.keywordList;
     if (keywordList && keywordList.length > 0) {
       const realData = keywordList[0];
-      
-      console.log(`📊 키워드: ${realData.relKeyword}`);
-      console.log(`📱 모바일: ${realData.monthlyMobileQcCnt || 0}`);
-      console.log(`💻 PC: ${realData.monthlyPcQcCnt || 0}`);
       
       const result = {
         keyword: realData.relKeyword,
@@ -70,27 +61,18 @@ app.get('/api/keywords', async (req, res) => {
 
       res.json({ success: true, data: [result] });
     } else {
-      console.log('❌ 키워드 데이터를 찾을 수 없습니다');
       res.json({ success: false, error: '키워드 데이터를 찾을 수 없습니다' });
     }
     
   } catch (error) {
     console.error('❌ API 에러:', error.response?.data || error.message);
-    
-    if (error.response?.status === 401) {
-      res.json({ success: false, error: 'API 인증 실패 - 키를 확인해주세요' });
-    } else if (error.response?.status === 403) {
-      res.json({ success: false, error: 'API 권한 없음' });
-    } else {
-      res.json({ success: false, error: 'API 호출 실패: ' + error.message });
-    }
+    res.json({ success: false, error: 'API 호출 실패: ' + error.message });
   }
 });
 
-app.listen(3000, () => {
-  console.log('🚀 실제 네이버 검색량 서버 시작됨!');
-  console.log('🌐 http://localhost:3000');
-  console.log('✅ API 키 설정 완료');
-  console.log('');
-  console.log('이제 진짜 네이버 검색량을 가져옵니다! 🎉');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 서버 시작됨: ${PORT}`);
 });
+
+module.exports = app;
